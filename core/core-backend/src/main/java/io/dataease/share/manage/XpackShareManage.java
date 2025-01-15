@@ -188,7 +188,7 @@ public class XpackShareManage {
     public IPage<XpackShareGridVO> query(int pageNum, int pageSize, VisualizationWorkbranchQueryRequest request) {
         IPage<XpackSharePO> poiPage = proxy().querySharePage(pageNum, pageSize, request);
         List<XpackShareGridVO> vos = proxy().formatResult(poiPage.getRecords());
-        if (!org.springframework.util.CollectionUtils.isEmpty(vos)) {
+        if (CollectionUtils.isNotEmpty(vos)) {
             vos.forEach(item -> {
                 item.setCreator(StringUtils.equals(item.getCreator(), "1") ? Translator.get("i18n_sys_admin") : item.getCreator());
             });
@@ -234,7 +234,7 @@ public class XpackShareManage {
         }
         QueryWrapper<XpackShare> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("uuid", request.getUuid());
-        XpackShare xpackShare = xpackShareMapper.selectOne(queryWrapper);
+        XpackShare xpackShare = proxy().queryOneShare(queryWrapper);
         if (ObjectUtils.isEmpty(xpackShare))
             return null;
         if (!peRequireValid(sharedBase, xpackShare)) {
@@ -250,6 +250,10 @@ public class XpackShareManage {
         String typeText = (ObjectUtils.isNotEmpty(type) && type == 1) ? "dashboard" : "dataV";
         TicketValidVO validVO = shareTicketManage.validateTicket(request.getTicket(), xpackShare);
         return new XpackShareProxyVO(xpackShare.getResourceId(), xpackShare.getCreator(), linkExp(xpackShare), pwdValid(xpackShare, request.getCiphertext()), typeText, inIframeError, false, true, validVO);
+    }
+
+    public XpackShare queryOneShare(QueryWrapper<XpackShare> queryWrapper) {
+        return xpackShareMapper.selectOne(queryWrapper);
     }
 
     private boolean linkExp(XpackShare xpackShare) {
